@@ -56,7 +56,7 @@ function App() {
     <div className="app">
       <nav className="navbar">
         <div className="nav-container">
-          <h1 className="logo">🤖 AI Assignment System</h1>
+          <h1 className="logo"> AI Assignment System</h1>
           <div className="nav-buttons">
             <button 
               className={`nav-btn ${page === 'student' ? 'active' : ''}`}

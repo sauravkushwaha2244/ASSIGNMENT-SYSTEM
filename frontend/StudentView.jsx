@@ -75,7 +75,7 @@ function StudentView({ onNewSubmission, API }) {
   return (
     <div className="student-container">
       <div className="upload-section">
-        <h2>📤 Submit Your Assignment</h2>
+        <h2> Submit Your Assignment</h2>
         
         <form onSubmit={handleSubmit} className="upload-form">
           <div className="form-group">
@@ -130,7 +130,7 @@ function StudentView({ onNewSubmission, API }) {
             className="submit-btn"
             disabled={loading}
           >
-            {loading ? '⏳ Analyzing...' : '🚀 Submit Assignment'}
+            {loading ? ' Analyzing...' : 'Submit Assignment'}
           </button>
         </form>
 
@@ -139,7 +139,7 @@ function StudentView({ onNewSubmission, API }) {
 
       {result && (
         <div className="result-section">
-          <h2>📊 Analysis Results</h2>
+          <h2> Analysis Results</h2>
           
           <div className="student-info">
             <p><strong>Student:</strong> {result.studentName}</p>
