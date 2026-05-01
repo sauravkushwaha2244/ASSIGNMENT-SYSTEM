@@ -3,7 +3,7 @@ import StudentView from './components/StudentView';
 import TeacherView from './components/TeacherView';
 import './App.css';
 
-const API = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/assignments';
+const API = import.meta.env.VITE_API_URL || 'https://ai-assignment-system.onrender.com';
 
 function App() {
   const [page, setPage] = useState('student');
