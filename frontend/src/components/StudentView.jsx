@@ -40,7 +40,7 @@ function StudentView({ onNewSubmission, API }) {
       fd.append('subject', formData.subject);
       fd.append('assignment', file);
 
-      const res = await fetch(`${API}/upload`, {
+      const res = await fetch(`${API}/api/assignments/upload`, {
         method: 'POST',
         body: fd
       });

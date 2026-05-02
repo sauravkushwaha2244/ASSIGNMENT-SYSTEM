@@ -3,7 +3,7 @@ import StudentView from './components/StudentView';
 import TeacherView from './components/TeacherView';
 import './App.css';
 
-const API = import.meta.env.VITE_API_URL || '';
+const API = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 function App() {
   const [page, setPage] = useState('student');
@@ -15,7 +15,7 @@ function App() {
     try {
       setLoading(true);
       setError(null);
-      const res = await fetch(API);
+      const res = await fetch(`${API}/api/assignments`);
       if (!res.ok) throw new Error('Failed to fetch assignments');
       const data = await res.json();
       setAssignments(data);
@@ -36,7 +36,7 @@ function App() {
 
   const handleStatusUpdate = async (id, newStatus) => {
     try {
-      const res = await fetch(`${API}/${id}/status`, {
+      const res = await fetch(`${API}/api/assignments/${id}/status`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json'
