@@ -1,6 +1,5 @@
 const express = require("express");
 const crypto = require("crypto");
-const fs = require("fs");
 const mongoose = require("mongoose");
 const upload = require("./config/upload");
 const Assignment = require("./Assignmet");
@@ -12,9 +11,8 @@ const router = express.Router();
 
 const analysisCache = new Map();
 
-function hashFile(filePath) {
-  const fileBuffer = fs.readFileSync(filePath);
-  return crypto.createHash("sha256").update(fileBuffer).digest("hex");
+function hashBuffer(buffer) {
+  return crypto.createHash("sha256").update(buffer).digest("hex");
 }
 
 function getStatus(qualityScore, plagiarismRisk) {
@@ -22,18 +20,19 @@ function getStatus(qualityScore, plagiarismRisk) {
   if (plagiarismRisk <= 60) return "Needs Review";
   return "High Risk";
 }
+
 function useDatabase() {
   return mongoose.connection.readyState === 1;
 }
-async function extractTextFromFile(filePath, mimeType) {
+
+async function extractTextFromBuffer(buffer, mimeType) {
   try {
     if (mimeType === "text/plain") {
-      return fs.readFileSync(filePath, "utf-8").slice(0, 15000);
+      return buffer.toString("utf-8").slice(0, 15000);
     }
 
     if (mimeType === "application/pdf") {
-      const dataBuffer = fs.readFileSync(filePath);
-      const data = await pdfParse(dataBuffer);
+      const data = await pdfParse(buffer);
       return data.text.slice(0, 15000);
     }
 
@@ -41,7 +40,7 @@ async function extractTextFromFile(filePath, mimeType) {
       mimeType === "application/msword" ||
       mimeType === "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
     ) {
-      const result = await mammoth.extractRawText({ path: filePath });
+      const result = await mammoth.extractRawText({ buffer });
       return result.value.slice(0, 15000);
     }
 
@@ -63,7 +62,7 @@ router.post("/upload", upload.single("assignment"), async (req, res) => {
       return res.status(400).json({ message: "Missing required fields" });
     }
 
-    const fileHash = hashFile(req.file.path);
+    const fileHash = hashBuffer(req.file.buffer);
     console.log(`\n📄 Processing: ${req.file.originalname}`);
     console.log(`🔐 File Hash: ${fileHash}`);
 
@@ -96,7 +95,7 @@ router.post("/upload", upload.single("assignment"), async (req, res) => {
 
     console.log("⏳ Running AI analysis...");
 
-   let fileContent = await extractTextFromFile(req.file.path, req.file.mimetype);
+    let fileContent = await extractTextFromBuffer(req.file.buffer, req.file.mimetype);
     
     if (fileContent.includes("[")) {
       fileContent = `${fileContent}\n\nFile: ${req.file.originalname}\nSize: ${req.file.size} bytes\nType: ${req.file.mimetype}`;
