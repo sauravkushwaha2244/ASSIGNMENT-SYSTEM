@@ -15,12 +15,17 @@ function App() {
     try {
       setLoading(true);
       setError(null);
-      const res = await fetch(API);
-      if (!res.ok) throw new Error('Failed to fetch assignments');
+
+      const res = await fetch(`${API}/api/assignments`);
+
+      if (!res.ok) {
+        throw new Error('Failed to fetch assignments');
+      }
+
       const data = await res.json();
-      setAssignments(data);
+      setAssignments(Array.isArray(data) ? data : []);
     } catch (err) {
-      setError(err.message);
+      setError(err.message || 'Something went wrong');
     } finally {
       setLoading(false);
     }
@@ -31,12 +36,14 @@ function App() {
   }, []);
 
   const handleNewSubmission = (newAssignment) => {
-    setAssignments([newAssignment, ...assignments]);
+    setAssignments((prev) => [newAssignment, ...prev]);
   };
 
   const handleStatusUpdate = async (id, newStatus) => {
     try {
-      const res = await fetch(`${API}/${id}/status`, {
+      setError(null);
+
+      const res = await fetch(`${API}/api/assignments/${id}/status`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json'
@@ -44,11 +51,19 @@ function App() {
         body: JSON.stringify({ status: newStatus })
       });
 
-      if (!res.ok) throw new Error('Failed to update status');
+      if (!res.ok) {
+        throw new Error('Failed to update status');
+      }
+
       const updated = await res.json();
-      setAssignments(prev => [newAssignment, ...prev]);
+
+      setAssignments((prev) =>
+        prev.map((assignment) =>
+          assignment._id === id ? updated : assignment
+        )
+      );
     } catch (err) {
-      setError(err.message);
+      setError(err.message || 'Something went wrong');
     }
   };
 
@@ -56,15 +71,17 @@ function App() {
     <div className="app">
       <nav className="navbar">
         <div className="nav-container">
-          <h1 className="logo"> AI Assignment System</h1>
+          <h1 className="logo">AI Assignment System</h1>
+
           <div className="nav-buttons">
-            <button 
+            <button
               className={`nav-btn ${page === 'student' ? 'active' : ''}`}
               onClick={() => setPage('student')}
             >
               Student
             </button>
-            <button 
+
+            <button
               className={`nav-btn ${page === 'teacher' ? 'active' : ''}`}
               onClick={() => setPage('teacher')}
             >
@@ -78,13 +95,14 @@ function App() {
 
       <div className="main-content">
         {page === 'student' && (
-          <StudentView 
+          <StudentView
             onNewSubmission={handleNewSubmission}
             API={API}
           />
         )}
+
         {page === 'teacher' && (
-          <TeacherView 
+          <TeacherView
             assignments={assignments}
             loading={loading}
             onStatusUpdate={handleStatusUpdate}

@@ -7,6 +7,7 @@ function StudentView({ onNewSubmission, API }) {
     rollNo: '',
     subject: ''
   });
+
   const [file, setFile] = useState(null);
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -14,7 +15,8 @@ function StudentView({ onNewSubmission, API }) {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+
+    setFormData((prev) => ({
       ...prev,
       [name]: value
     }));
@@ -40,43 +42,57 @@ function StudentView({ onNewSubmission, API }) {
       fd.append('subject', formData.subject);
       fd.append('assignment', file);
 
-      const res = await fetch(`${API}/upload`, {
+      const res = await fetch(`${API}/api/assignments/upload`, {
         method: 'POST',
         body: fd
       });
 
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.message || 'Upload failed');
+      let data;
+      try {
+        data = await res.json();
+      } catch {
+        throw new Error('Server returned invalid response');
       }
 
-      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || data.error || 'Upload failed');
+      }
+
       setResult(data.assignment);
       onNewSubmission(data.assignment);
-      
-      setFormData({ studentName: '', rollNo: '', subject: '' });
+
+      setFormData({
+        studentName: '',
+        rollNo: '',
+        subject: ''
+      });
+
       setFile(null);
     } catch (err) {
-      setError(err.message);
+      setError(err.message || 'Something went wrong');
     } finally {
       setLoading(false);
     }
   };
 
   const getStatusColor = (status) => {
-    switch(status) {
-      case 'Safe': return '#4CAF50';
-      case 'Needs Review': return '#FF9800';
-      case 'High Risk': return '#F44336';
-      default: return '#666';
+    switch (status) {
+      case 'Safe':
+        return '#4CAF50';
+      case 'Needs Review':
+        return '#FF9800';
+      case 'High Risk':
+        return '#F44336';
+      default:
+        return '#666';
     }
   };
 
   return (
     <div className="student-container">
       <div className="upload-section">
-        <h2> Submit Your Assignment</h2>
-        
+        <h2>Submit Your Assignment</h2>
+
         <form onSubmit={handleSubmit} className="upload-form">
           <div className="form-group">
             <label>Student Name *</label>
@@ -125,12 +141,12 @@ function StudentView({ onNewSubmission, API }) {
             {file && <p className="file-name">✓ {file.name}</p>}
           </div>
 
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             className="submit-btn"
             disabled={loading}
           >
-            {loading ? ' Analyzing...' : 'Submit Assignment'}
+            {loading ? 'Analyzing...' : 'Submit Assignment'}
           </button>
         </form>
 
@@ -139,8 +155,8 @@ function StudentView({ onNewSubmission, API }) {
 
       {result && (
         <div className="result-section">
-          <h2> Analysis Results</h2>
-          
+          <h2>Analysis Results</h2>
+
           <div className="student-info">
             <p><strong>Student:</strong> {result.studentName}</p>
             <p><strong>Roll No:</strong> {result.rollNo}</p>
@@ -153,9 +169,9 @@ function StudentView({ onNewSubmission, API }) {
               <h3>AI Quality Score</h3>
               <div className="score-value">{result.aiScore}%</div>
               <div className="score-bar">
-                <div 
+                <div
                   className="score-fill"
-                  style={{width: `${result.aiScore}%`}}
+                  style={{ width: `${result.aiScore}%` }}
                 ></div>
               </div>
               <p className="score-label">Content originality & quality</p>
@@ -165,9 +181,9 @@ function StudentView({ onNewSubmission, API }) {
               <h3>Plagiarism Risk</h3>
               <div className="score-value">{result.plagiarismScore}%</div>
               <div className="score-bar">
-                <div 
+                <div
                   className="score-fill plagiarism"
-                  style={{width: `${result.plagiarismScore}%`}}
+                  style={{ width: `${result.plagiarismScore}%` }}
                 ></div>
               </div>
               <p className="score-label">Risk of copied/AI content</p>
@@ -177,22 +193,29 @@ function StudentView({ onNewSubmission, API }) {
               <h3>Grammar Score</h3>
               <div className="score-value">{result.grammarScore}%</div>
               <div className="score-bar">
-                <div 
+                <div
                   className="score-fill grammar"
-                  style={{width: `${result.grammarScore}%`}}
+                  style={{ width: `${result.grammarScore}%` }}
                 ></div>
               </div>
               <p className="score-label">Language quality</p>
             </div>
           </div>
 
-          <div className="status-box" style={{borderLeftColor: getStatusColor(result.status)}}>
+          <div
+            className="status-box"
+            style={{ borderLeftColor: getStatusColor(result.status) }}
+          >
             <p className="status-label">Overall Status</p>
-            <h3 style={{color: getStatusColor(result.status)}}>{result.status}</h3>
-            {result.reasoning && <p className="reasoning">{result.reasoning}</p>}
+            <h3 style={{ color: getStatusColor(result.status) }}>
+              {result.status}
+            </h3>
+            {result.reasoning && (
+              <p className="reasoning">{result.reasoning}</p>
+            )}
           </div>
 
-          <button 
+          <button
             className="new-submission-btn"
             onClick={() => setResult(null)}
           >
